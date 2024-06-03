@@ -29,7 +29,7 @@ func main() {
 	repo := repository.New()
 	svc := service.New(repo)
 
-	handler.NewGRPC(grpcServer)
+	handler.NewGRPC(grpcServer, svc)
 	svc.CreateOrder(context.Background())
 
 	log.Println("GRPC server started at:", grpcAddr)

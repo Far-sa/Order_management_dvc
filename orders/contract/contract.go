@@ -7,7 +7,8 @@ import (
 )
 
 type OrderService interface {
-	CreateOrder(ctx context.Context, in *pb.CreateOrderRequest) (*pb.Order, error)
+	CreateOrder(context.Context) error
+	ValidateOrder(ctx context.Context, in *pb.CreateOrderRequest) error
 }
 type OrderRepository interface {
 	CreateOrder(context.Context) error
