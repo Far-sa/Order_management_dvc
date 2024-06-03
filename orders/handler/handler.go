@@ -14,13 +14,15 @@ type grpcHandler struct {
 	pb.UnimplementedOrderServiceServer
 }
 
+// !
 func NewGRPC(grpcServer *grpc.Server) {
 	handler := &grpcHandler{}
 	pb.RegisterOrderServiceServer(grpcServer, handler)
 }
 
 func (h *grpcHandler) CreateOrder(ctx context.Context, in *pb.CreateOrderRequest) (*pb.Order, error) {
-	log.Println("New Order received")
+	log.Printf("New Order received! order %v:", in)
+
 	order := &pb.Order{
 		ID: "24",
 	}
