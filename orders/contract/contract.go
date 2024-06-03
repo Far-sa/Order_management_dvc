@@ -1,9 +1,13 @@
 package contract
 
-import "context"
+import (
+	"context"
+
+	pb "github.com/Far-sa/commons/api"
+)
 
 type OrderService interface {
-	CreateOrder(context.Context) error
+	CreateOrder(ctx context.Context, in *pb.CreateOrderRequest) (*pb.Order, error)
 }
 type OrderRepository interface {
 	CreateOrder(context.Context) error
