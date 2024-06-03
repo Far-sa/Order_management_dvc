@@ -7,6 +7,8 @@ import (
 
 	common "github.com/Far-sa/commons"
 	pb "github.com/Far-sa/commons/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type handler struct {
@@ -42,6 +44,16 @@ func (h *handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 		Items:      items,
 	})
 
+	//!! convert error
+	sErr := status.Convert(err)
+	if sErr != nil {
+		if sErr.Code() != codes.InvalidArgument {
+			common.WriteError(w, http.StatusBadRequest, sErr.Message())
+			return
+		}
+
+	}
+
 	if err != nil {
 		common.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -51,6 +63,7 @@ func (h *handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// * Helper function
 func validateItems(items []*pb.ItemsWithQuantity) error {
 	if len(items) == 0 {
 		return errors.New("items must not be empty")
@@ -67,7 +80,11 @@ func validateItems(items []*pb.ItemsWithQuantity) error {
 	return nil
 }
 
-//! handle with Echo
+// ! handle with Echo
+// func (h *handler) RegisterRoutes(e *echo.Echo) {
+// 	e.POST("/api/customers/:customerID/orders", h.HandleCreateOrder)
+// }
+
 // func (h *handler) HandleCreateOrder(c echo.Context) error {
 // 	log.Println("creating order")
 
