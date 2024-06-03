@@ -1,6 +1,9 @@
 package handler
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
 type handler struct {
 	// gateway
@@ -15,5 +18,5 @@ func (h *handler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
-    
+	log.Println("creating order")
 }

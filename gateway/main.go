@@ -4,11 +4,14 @@ import (
 	"log"
 	"net/http"
 
+	common "github.com/Far-sa/commons"
 	"github.com/Far-sa/gateway/handler"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 var (
-	httpAddr = ":8080"
+	httpAddr = common.EnvString("HTTP_ADDR", ":3000")
 )
 
 func main() {
