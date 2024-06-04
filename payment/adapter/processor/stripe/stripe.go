@@ -22,7 +22,8 @@ func NewProcessor() *stripeProcessor {
 func (s *stripeProcessor) CreatePaymentLink(ctx context.Context, order *pb.Order) (string, error) {
 	fmt.Printf("creating payment link for order %+v\n", order)
 
-	gatewaySuccessURL := fmt.Sprintf("%s/success.html", gatewayHTTPAddr)
+	gatewaySuccessURL := fmt.Sprintf("%s/success.html?customerID=%s&orderID=%s", gatewayHTTPAddr, order.CustomerID, order.ID)
+	gatewayCancelURL := fmt.Sprintf("%s/cancel.html", gatewayHTTPAddr)
 
 	items := []*stripe.CheckoutSessionLineItemParams{}
 	for _, item := range order.Items {
@@ -36,6 +37,7 @@ func (s *stripeProcessor) CreatePaymentLink(ctx context.Context, order *pb.Order
 		LineItems:  items,
 		Mode:       stripe.String(string(stripe.CheckoutSessionModePayment)),
 		SuccessURL: stripe.String(gatewaySuccessURL),
+		CancelURL:  stripe.String(gatewayCancelURL),
 	}
 
 	result, err := session.New(params)

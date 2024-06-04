@@ -24,6 +24,10 @@ func NewGRPC(grpcServer *grpc.Server, service contract.OrderService, ch *amqp.Ch
 	pb.RegisterOrderServiceServer(grpcServer, handler)
 }
 
+func (h *grpcHandler) GetOrder(ctx context.Context, in *pb.GetOrderRequest) (*pb.Order, error) {
+	return h.service.GetOrder(ctx, in)
+}
+
 func (h *grpcHandler) CreateOrder(ctx context.Context, in *pb.CreateOrderRequest) (*pb.Order, error) {
 	log.Printf("New Order received! order %v:", in)
 
