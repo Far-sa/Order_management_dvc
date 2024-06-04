@@ -15,6 +15,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 	"google.golang.org/grpc"
+	"github.com/stripe/stripe-go/v78"
 )
 
 var (
@@ -25,6 +26,7 @@ var (
 	amqpPort    = common.EnvString("RABBITMQ_PORT", "5672")
 	grpcAddr    = common.EnvString("GRPC_ADDRESS", "localhost:2001")
 	consulAddr  = common.EnvString("CONSUL_ADDR", "localhost:8500")
+	stripeKey   = common.EnvString("STRIPE_KEY", "")
 )
 
 func main() {
@@ -51,6 +53,9 @@ func main() {
 		}
 	}()
 	defer registry.Unregister(ctx, instanceID, serviceName)
+
+	//* stripe setup
+	stripe.Key = stripeKey
 
 	// Broker connection
 	ch, close := broker.Connect(amqpUser, amqpPass, amqpHost, amqpPort)
