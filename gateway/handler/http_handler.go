@@ -7,14 +7,15 @@ import (
 
 	common "github.com/Far-sa/commons"
 	pb "github.com/Far-sa/commons/api"
+	"github.com/Far-sa/gateway/gateway"
 )
 
 type handler struct {
-	client pb.OrderServiceClient
+	gateway gateway.OrdersGateway
 }
 
-func New(client pb.OrderServiceClient) *handler {
-	return &handler{client: client}
+func New(gateway gateway.OrdersGateway) *handler {
+	return &handler{gateway}
 }
 
 func (h *handler) RegisterRoutes(mux *http.ServeMux) {
@@ -37,7 +38,7 @@ func (h *handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o, err := h.client.CreateOrder(r.Context(), &pb.CreateOrderRequest{
+	o, err := h.gateway.CreateOrder(r.Context(), &pb.CreateOrderRequest{
 		CustomerID: customerID,
 		Items:      items,
 	})
