@@ -31,7 +31,13 @@ func (h *grpcHandler) GetOrder(ctx context.Context, in *pb.GetOrderRequest) (*pb
 func (h *grpcHandler) CreateOrder(ctx context.Context, in *pb.CreateOrderRequest) (*pb.Order, error) {
 	log.Printf("New Order received! order %v:", in)
 
-	order, err := h.service.CreateOrder(ctx, in)
+	//TODO implement validation as separate adapter or service
+	items, err := h.service.ValidateOrder(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+
+	order, err := h.service.CreateOrder(ctx, in, items)
 	if err != nil {
 		return nil, err
 	}

@@ -17,20 +17,26 @@ func New(orderRepository contract.OrderRepository) *service {
 	return &service{orderRepository: orderRepository}
 }
 
-func (s *service) CreateOrder(ctx context.Context, in *pb.CreateOrderRequest) (*pb.Order, error) {
-	items, err := s.ValidateOrder(ctx, in)
+func (s *service) CreateOrder(ctx context.Context, in *pb.CreateOrderRequest, items []*pb.Item) (*pb.Order, error) {
+
+	id, err := s.orderRepository.CreateOrder(ctx, in, items)
 	if err != nil {
 		return nil, err
 	}
 
-	order := &pb.Order{
-		ID:         "24",
+	o := &pb.Order{
+		ID:         id,
 		CustomerID: in.CustomerID,
 		Status:     "pending",
 		Items:      items,
 	}
 
-	return order, nil
+	return o, nil
+
+}
+
+func (s *service) GetOrder(ctx context.Context, in *pb.GetOrderRequest) (*pb.Order, error) {
+	return s.orderRepository.Get(ctx, in.OrderID, in.CustomerID)
 }
 
 func (s *service) ValidateOrder(ctx context.Context, in *pb.CreateOrderRequest) ([]*pb.Item, error) {
