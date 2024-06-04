@@ -10,6 +10,8 @@ import (
 	"github.com/Far-sa/commons/broker"
 	"github.com/Far-sa/commons/discovery"
 	"github.com/Far-sa/commons/discovery/consul"
+	"github.com/Far-sa/payment/consumer"
+	"github.com/Far-sa/payment/service"
 
 	_ "github.com/joho/godotenv/autoload"
 	"google.golang.org/grpc"
@@ -57,6 +59,9 @@ func main() {
 		ch.Close()
 	}()
 
+	paymentSvc := service.NewService()
+	consumer := consumer.NewConsumer(paymentSvc)
+	go consumer.Listen(ch)
 	// gRPC server
 	grpcServer := grpc.NewServer()
 

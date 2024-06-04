@@ -14,5 +14,5 @@ func NewService() *service {
 }
 
 func (s *service) CreatePayment(ctx context.Context, o *pb.Order) (string, error) {
-	panic("not implemented")
+	return "", nil
 }
