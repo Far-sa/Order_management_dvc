@@ -1,10 +1,9 @@
-module github.com/Far-sa/order
+module github.com/Far-sa/payment
 
 go 1.22.3
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/rabbitmq/amqp091-go v1.10.0
 	google.golang.org/grpc v1.56.3
 )
 
