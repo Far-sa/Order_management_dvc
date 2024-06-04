@@ -17,7 +17,7 @@ import (
 
 var (
 	serviceName = "gateway"
-	httpAddr    = common.EnvString("HTTP_ADDR", ":3000")
+	httpAddr    = common.EnvString("HTTP_ADDR", ":8080")
 	consulAddr  = common.EnvString("CONSUL_ADDR", "localhost:8500")
 )
 

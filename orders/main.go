@@ -7,6 +7,7 @@ import (
 	"time"
 
 	common "github.com/Far-sa/commons"
+	"github.com/Far-sa/commons/broker"
 	"github.com/Far-sa/commons/discovery"
 	"github.com/Far-sa/commons/discovery/consul"
 	"github.com/Far-sa/order/handler"
@@ -21,6 +22,10 @@ var (
 	serviceName = "orders"
 	grpcAddr    = common.EnvString("GRPC_ADDR", "localhost:2000")
 	consulAddr  = common.EnvString("CONSUL_ADDR", "localhost:8500")
+	amqpUser    = common.EnvString("RABBITMQ_USER", "guest")
+	amqpPass    = common.EnvString("RABBITMQ_PASS", "guest")
+	amqpHost    = common.EnvString("RABBITMQ_HOST", "localhost")
+	amqpPort    = common.EnvString("RABBITMQ_PORT", "5672")
 )
 
 func main() {
@@ -46,6 +51,12 @@ func main() {
 
 	defer registry.Unregister(ctx, instanceID, serviceName)
 
+	ch, close := broker.Connect(amqpUser, amqpPass, amqpHost, amqpPort)
+	defer func() {
+		close()
+		ch.Close()
+	}()
+
 	grpcServer := grpc.NewServer()
 
 	lis, err := net.Listen("tcp", grpcAddr)
@@ -56,8 +67,7 @@ func main() {
 	repo := repository.New()
 	svc := service.New(repo)
 
-	handler.NewGRPC(grpcServer, svc)
-	svc.CreateOrder(context.Background())
+	handler.NewGRPC(grpcServer, svc, ch)
 
 	log.Println("GRPC server started at:", grpcAddr)
 
