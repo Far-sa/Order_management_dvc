@@ -7,8 +7,6 @@ import (
 
 	common "github.com/Far-sa/commons"
 	pb "github.com/Far-sa/commons/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type handler struct {
@@ -45,14 +43,14 @@ func (h *handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 	})
 
 	//!! convert error
-	sErr := status.Convert(err)
-	if sErr != nil {
-		if sErr.Code() != codes.InvalidArgument {
-			common.WriteError(w, http.StatusBadRequest, sErr.Message())
-			return
-		}
+	// sErr := status.Convert(err)
+	// if sErr != nil {
+	// 	if sErr.Code() != codes.InvalidArgument {
+	// 		common.WriteError(w, http.StatusBadRequest, sErr.Message())
+	// 		return
+	// 	}
 
-	}
+	// }
 
 	if err != nil {
 		common.WriteError(w, http.StatusInternalServerError, err.Error())
