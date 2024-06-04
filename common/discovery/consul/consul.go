@@ -3,6 +3,8 @@ package consul
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -54,4 +56,27 @@ func (r *Registry) Register(ctx context.Context, instanceID, serviceName, hostPo
 		},
 	})
 
+}
+
+func (r *Registry) Unregister(ctx context.Context, instanceID string, serviceName string) error {
+	log.Printf("Unregistering service %s", instanceID)
+	return r.client.Agent().CheckDeregister(instanceID)
+}
+
+func (r *Registry) HealthCheck(instanceID string, serviceName string) error {
+	return r.client.Agent().UpdateTTL(instanceID, "online", consul.HealthPassing)
+}
+
+func (r *Registry) Discover(ctx context.Context, serviceName string) ([]string, error) {
+	entries, _, err := r.client.Health().Service(serviceName, "", true, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var instances []string
+	for _, entry := range entries {
+		instances = append(instances, fmt.Sprintf("%s:%d", entry.Service.Address, entry.Service.Port))
+	}
+
+	return instances, nil
 }
