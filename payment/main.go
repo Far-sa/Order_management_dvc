@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 	"time"
 
 	common "github.com/Far-sa/commons"
@@ -12,6 +13,7 @@ import (
 	"github.com/Far-sa/commons/discovery/consul"
 	stripeProcessor "github.com/Far-sa/payment/adapter/processor/stripe"
 	"github.com/Far-sa/payment/consumer"
+	"github.com/Far-sa/payment/handler"
 	"github.com/Far-sa/payment/service"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -20,14 +22,16 @@ import (
 )
 
 var (
-	serviceName = "payment"
-	amqpUser    = common.EnvString("RABBITMQ_USER", "guest")
-	amqpPass    = common.EnvString("RABBITMQ_PASS", "guest")
-	amqpHost    = common.EnvString("RABBITMQ_HOST", "localhost")
-	amqpPort    = common.EnvString("RABBITMQ_PORT", "5672")
-	grpcAddr    = common.EnvString("GRPC_ADDRESS", "localhost:2001")
-	consulAddr  = common.EnvString("CONSUL_ADDR", "localhost:8500")
-	stripeKey   = common.EnvString("STRIPE_KEY", "")
+	serviceName          = "payment"
+	amqpUser             = common.EnvString("RABBITMQ_USER", "guest")
+	amqpPass             = common.EnvString("RABBITMQ_PASS", "guest")
+	amqpHost             = common.EnvString("RABBITMQ_HOST", "localhost")
+	amqpPort             = common.EnvString("RABBITMQ_PORT", "5672")
+	grpcAddr             = common.EnvString("GRPC_ADDRESS", "localhost:2001")
+	consulAddr           = common.EnvString("CONSUL_ADDR", "localhost:8500")
+	stripeKey            = common.EnvString("STRIPE_KEY", "")
+	httpAddr             = common.EnvString("HTTP_ADDRESS", "localhost:8081")
+	endpointStripeSecret = common.EnvString("STRIPE_ENDPOINT_SECRET", "whsec_...")
 )
 
 func main() {
@@ -70,6 +74,19 @@ func main() {
 	paymentSvc := service.NewService(stripeProcessor)
 	consumer := consumer.NewConsumer(paymentSvc)
 	go consumer.Listen(ch)
+
+	// http server
+	mux := http.NewServeMux()
+	httpServer := handler.NewPaymentHTTPHandler(ch)
+	httpServer.RegisterRoutes(mux)
+
+	go func() {
+		log.Printf("Starting payment http server on %s", httpAddr)
+		if err := http.ListenAndServe(httpAddr, mux); err != nil {
+			log.Fatal("failed to start http payment server ")
+		}
+	}()
+
 	// gRPC server
 	grpcServer := grpc.NewServer()
 

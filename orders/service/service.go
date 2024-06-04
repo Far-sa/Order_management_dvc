@@ -52,7 +52,7 @@ func (s *service) ValidateOrder(ctx context.Context, in *pb.CreateOrderRequest) 
 	var itemsWithPrice []*pb.Item
 	for _, i := range mergedItems {
 		itemsWithPrice = append(itemsWithPrice, &pb.Item{
-			PricID:   "price_1PNz51RxQqzMVLiGKLqohCOK",
+			PriceID:  "price_1PNz51RxQqzMVLiGKLqohCOK",
 			ID:       i.ItemID,
 			Quantity: i.Quantity,
 		})
