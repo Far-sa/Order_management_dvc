@@ -10,12 +10,13 @@ import (
 	"github.com/Far-sa/commons/broker"
 	"github.com/Far-sa/commons/discovery"
 	"github.com/Far-sa/commons/discovery/consul"
+	stripeProcessor "github.com/Far-sa/payment/adapter/processor/stripe"
 	"github.com/Far-sa/payment/consumer"
 	"github.com/Far-sa/payment/service"
 
 	_ "github.com/joho/godotenv/autoload"
-	"google.golang.org/grpc"
 	"github.com/stripe/stripe-go/v78"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -64,7 +65,9 @@ func main() {
 		ch.Close()
 	}()
 
-	paymentSvc := service.NewService()
+	stripeProcessor := stripeProcessor.NewProcessor()
+
+	paymentSvc := service.NewService(stripeProcessor)
 	consumer := consumer.NewConsumer(paymentSvc)
 	go consumer.Listen(ch)
 	// gRPC server

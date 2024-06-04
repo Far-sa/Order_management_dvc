@@ -17,20 +17,42 @@ func New(orderRepository contract.OrderRepository) *service {
 	return &service{orderRepository: orderRepository}
 }
 
-func (s *service) CreateOrder(ctx context.Context) error {
-	return nil
+func (s *service) CreateOrder(ctx context.Context, in *pb.CreateOrderRequest) (*pb.Order, error) {
+	items, err := s.ValidateOrder(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+
+	order := &pb.Order{
+		ID:         "24",
+		CustomerID: in.CustomerID,
+		Status:     "pending",
+		Items:      items,
+	}
+
+	return order, nil
 }
 
-func (s *service) ValidateOrder(ctx context.Context, in *pb.CreateOrderRequest) error {
+func (s *service) ValidateOrder(ctx context.Context, in *pb.CreateOrderRequest) ([]*pb.Item, error) {
 	if len(in.Items) == 0 {
-		return common.ErrNoItems
+		return nil, common.ErrNoItems
 	}
 	mergedItems := mergeItemsQuantities(in.Items)
 
 	log.Println("", mergedItems)
 
-	//* validate with repository
-	return nil
+	//* validate with stock
+	//! Temp :
+	var itemsWithPrice []*pb.Item
+	for _, i := range mergedItems {
+		itemsWithPrice = append(itemsWithPrice, &pb.Item{
+			PricID:   "price_1PNz51RxQqzMVLiGKLqohCOK",
+			ID:       i.ItemID,
+			Quantity: i.Quantity,
+		})
+	}
+
+	return itemsWithPrice, nil
 
 }
 

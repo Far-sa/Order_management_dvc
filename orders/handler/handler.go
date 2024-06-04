@@ -27,18 +27,20 @@ func NewGRPC(grpcServer *grpc.Server, service contract.OrderService, ch *amqp.Ch
 func (h *grpcHandler) CreateOrder(ctx context.Context, in *pb.CreateOrderRequest) (*pb.Order, error) {
 	log.Printf("New Order received! order %v:", in)
 
-	order := &pb.Order{
-		ID: "24",
-	}
-
-	q, err := h.ch.QueueDeclare(broker.OrderCreatedEvent, true, false, false, false, nil)
+	order, err := h.service.CreateOrder(ctx, in)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	marshalledOrder, err := json.Marshal(order)
 	if err != nil {
 		return nil, err
+	}
+
+	//TODO move to service
+	q, err := h.ch.QueueDeclare(broker.OrderCreatedEvent, true, false, false, false, nil)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	h.ch.PublishWithContext(ctx, "", q.Name, false, false, amqp.Publishing{

@@ -1,4 +1,4 @@
-package stripe
+package stripeProcessor
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/stripe/stripe-go/v78/checkout/session"
 )
 
-var gatewayHTTPAddr = common.EnvString("GATEWAY_HTTP_ADDR", "http://localhost:8080")
+var gatewayHTTPAddr = common.EnvString("GATEWAY_HTTP_ADDRESS", "http://localhost:8080")
 
 type stripeProcessor struct {
 }
