@@ -1,11 +1,16 @@
 package broker
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+const MaxRetryCount = 3
+const DLQ = "dlq_main"
 
 func Connect(user, pass, host, port string) (*amqp.Channel, func() error) {
 	address := fmt.Sprintf("amqp://%s:%s@%s:%s", user, pass, host, port)
@@ -31,4 +36,43 @@ func Connect(user, pass, host, port string) (*amqp.Channel, func() error) {
 	}
 
 	return ch, conn.Close
+}
+
+func HandleDelivery(ch *amqp.Channel, d *amqp.Delivery) error {
+
+	if d.Headers == nil {
+		d.Headers = amqp.Table{}
+	}
+
+	retryCount, ok := d.Headers["x-retry-count"].(int64)
+	if !ok {
+		retryCount = 0
+	}
+
+	retryCount++
+	d.Headers["x-retry-count"] = retryCount
+
+	log.Printf("retrying messages %s,retry count %d", d.Body, retryCount)
+
+	if retryCount >= MaxRetryCount {
+		// DLQ
+		log.Printf("moving message to DLQ %s", DLQ)
+
+		return ch.PublishWithContext(context.Background(), "", DLQ, false, false, amqp.Publishing{
+			ContentType:  "application/json",
+			Headers:      d.Headers,
+			Body:         d.Body,
+			DeliveryMode: amqp.Persistent,
+		})
+	}
+
+	time.Sleep(time.Second * time.Duration(retryCount))
+
+	return ch.PublishWithContext(context.Background(), d.Exchange, d.RoutingKey, false, false, amqp.Publishing{
+		ContentType:  "application/json",
+		Headers:      d.Headers,
+		Body:         d.Body,
+		DeliveryMode: amqp.Persistent,
+	})
+
 }
