@@ -29,6 +29,7 @@ message Order {
   string customerID = 2;
   string Status = 3;
   repeated Item Items = 4;
+  string PaymentLink = 5;
 }
 message ItemsWithQuantity {
   string itemID = 1;

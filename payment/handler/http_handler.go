@@ -1,12 +1,17 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
+
+	pb "github.com/Far-sa/commons/api"
+	"github.com/Far-sa/commons/broker"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stripe/stripe-go/v78"
@@ -36,7 +41,7 @@ func (h *PaymentHTTPHandler) handleCheckoutWebhook(w http.ResponseWriter, r *htt
 		return
 	}
 
-	event, err := webhook.ConstructEvent(body, r.Header.Get("Stripe-Signature"), endpointStripeSecret)
+	event, err := webhook.ConstructEvent(body, r.Header.Get("Stripe-Signature"), "")
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error verifying webhook signature: %v\n", err)
@@ -56,23 +61,23 @@ func (h *PaymentHTTPHandler) handleCheckoutWebhook(w http.ResponseWriter, r *htt
 		if session.PaymentStatus == "paid" {
 			log.Printf("Payment for Checkout Session %v succeeded!", session.ID)
 
-			// orderID := session.Metadata["orderID"]
-			// customerID := session.Metadata["customerID"]
+			orderID := session.Metadata["orderID"]
+			customerID := session.Metadata["customerID"]
 
-			// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			// defer cancel()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
 
-			// o := &pb.Order{
-			// 	ID:          orderID,
-			// 	CustomerID:  customerID,
-			// 	Status:      "paid",
-			// 	PaymentLink: "",
-			// }
+			o := &pb.Order{
+				ID:          orderID,
+				CustomerID:  customerID,
+				Status:      "paid",
+				PaymentLink: "",
+			}
 
-			// marshalledOrder, err := json.Marshal(o)
-			// if err != nil {
-			// 	log.Fatal(err.Error())
-			// }
+			marshalledOrder, err := json.Marshal(o)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
 
 			// tr := otel.Tracer("amqp")
 			// amqpContext, messageSpan := tr.Start(ctx, fmt.Sprintf("AMQP - publish - %s", broker.OrderPaidEvent))
@@ -80,15 +85,15 @@ func (h *PaymentHTTPHandler) handleCheckoutWebhook(w http.ResponseWriter, r *htt
 
 			// headers := broker.InjectAMQPHeaders(amqpContext)
 
-			// // publish a message
-			// h.channel.PublishWithContext(amqpContext, broker.OrderPaidEvent, "", false, false, amqp.Publishing{
-			// 	ContentType:  "application/json",
-			// 	Body:         marshalledOrder,
-			// 	DeliveryMode: amqp.Persistent,
-			// 	Headers:      headers,
-			// })
+			// publish a message
+			h.channel.PublishWithContext(ctx, broker.OrderPaidEvent, "", false, false, amqp.Publishing{
+				ContentType:  "application/json",
+				Body:         marshalledOrder,
+				DeliveryMode: amqp.Persistent,
+				// Headers:      headers,
+			})
 
-			// log.Println("Message published order.paid")
+			log.Println("Message published order.paid")
 		}
 	}
 
