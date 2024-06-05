@@ -17,6 +17,7 @@ import (
 	stripeProcessor "github.com/Far-sa/payment/adapter/processor/stripe"
 	"github.com/Far-sa/payment/handler"
 	"github.com/Far-sa/payment/service"
+	"github.com/Far-sa/payment/telemetry"
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/stripe/stripe-go/v78"
@@ -80,7 +81,9 @@ func main() {
 
 	gateway := gateway.NewGateway(registry)
 	paymentSvc := service.NewService(stripeProcessor, gateway)
-	consumer := consumer.NewConsumer(paymentSvc)
+	svcWithTelemetry := telemetry.NewTelemetryMiddleware(paymentSvc)
+
+	consumer := consumer.NewConsumer(svcWithTelemetry)
 	go consumer.Listen(ch)
 
 	// http server
