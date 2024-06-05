@@ -11,9 +11,9 @@ import (
 	"github.com/Far-sa/commons/broker"
 	"github.com/Far-sa/commons/discovery"
 	"github.com/Far-sa/commons/discovery/consul"
+	"github.com/Far-sa/payment/adapter/consumer"
 	"github.com/Far-sa/payment/adapter/gateway"
 	stripeProcessor "github.com/Far-sa/payment/adapter/processor/stripe"
-	"github.com/Far-sa/payment/consumer"
 	"github.com/Far-sa/payment/handler"
 	"github.com/Far-sa/payment/service"
 
