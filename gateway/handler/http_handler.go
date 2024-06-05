@@ -2,12 +2,14 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
 	common "github.com/Far-sa/commons"
 	pb "github.com/Far-sa/commons/api"
 	"github.com/Far-sa/gateway/gateway"
+	"github.com/Far-sa/gateway/param"
 )
 
 type handler struct {
@@ -82,7 +84,12 @@ func (h *handler) handleCreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.WriteJson(w, http.StatusOK, o)
+	res := &param.CreateOrderResponse{
+		Order:         o,
+		RedirectToURL: fmt.Sprintf("http://localhost:8080/success.html?customerID=%s&orderID=%s/"+o.CustomerID, o.ID),
+	}
+
+	common.WriteJson(w, http.StatusOK, res)
 
 }
 
