@@ -35,6 +35,11 @@ func Connect(user, pass, host, port string) (*amqp.Channel, func() error) {
 		log.Fatal(err)
 	}
 
+	err = createDLQAndDLX(ch)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return ch, conn.Close
 }
 
@@ -75,4 +80,60 @@ func HandleDelivery(ch *amqp.Channel, d *amqp.Delivery) error {
 		DeliveryMode: amqp.Persistent,
 	})
 
+}
+
+func createDLQAndDLX(ch *amqp.Channel) error {
+	q, err := ch.QueueDeclare(
+		"main_queue", // name
+		true,         // durable
+		false,        // delete when unused
+		false,        // exclusive
+		false,        // no-wait
+		nil,          // arguments
+	)
+	if err != nil {
+		return err
+	}
+
+	// Declare DLX
+	dlx := "dlx_main"
+	err = ch.ExchangeDeclare(
+		dlx,      // name
+		"fanout", // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
+	)
+	if err != nil {
+		return err
+	}
+
+	// Bind main queue to DLX
+	err = ch.QueueBind(
+		q.Name, // queue name
+		"",     // routing key
+		dlx,    // exchange
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Declare DLQ
+	_, err = ch.QueueDeclare(
+		DLQ,   // name
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		return err
+	}
+
+	return err
 }

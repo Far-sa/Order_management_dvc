@@ -45,6 +45,11 @@ func (c *consumer) Listen(ch *amqp.Channel) {
 			if err := json.Unmarshal(d.Body, o); err != nil {
 				d.Nack(false, false)
 				log.Printf("failed to unmarshal order: %v", err)
+
+				if err := broker.HandleDelivery(ch, &d); err != nil {
+					log.Printf("error handling retry %v", err)
+				}
+
 				continue
 			}
 
