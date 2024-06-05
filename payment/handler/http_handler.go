@@ -12,6 +12,7 @@ import (
 
 	pb "github.com/Far-sa/commons/api"
 	"github.com/Far-sa/commons/broker"
+	"go.opentelemetry.io/otel"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stripe/stripe-go/v78"
@@ -79,18 +80,18 @@ func (h *PaymentHTTPHandler) handleCheckoutWebhook(w http.ResponseWriter, r *htt
 				log.Fatal(err.Error())
 			}
 
-			// tr := otel.Tracer("amqp")
-			// amqpContext, messageSpan := tr.Start(ctx, fmt.Sprintf("AMQP - publish - %s", broker.OrderPaidEvent))
-			// defer messageSpan.End()
+			tr := otel.Tracer("amqp")
+			amqpContext, messageSpan := tr.Start(ctx, fmt.Sprintf("AMQP - publish - %s", broker.OrderPaidEvent))
+			defer messageSpan.End()
 
-			// headers := broker.InjectAMQPHeaders(amqpContext)
+			headers := broker.InjectAMQPHeaders(amqpContext)
 
 			// publish a message
-			h.channel.PublishWithContext(ctx, broker.OrderPaidEvent, "", false, false, amqp.Publishing{
+			h.channel.PublishWithContext(amqpContext, broker.OrderPaidEvent, "", false, false, amqp.Publishing{
 				ContentType:  "application/json",
 				Body:         marshalledOrder,
 				DeliveryMode: amqp.Persistent,
-				// Headers:      headers,
+				Headers:      headers,
 			})
 
 			log.Println("Message published order.paid")

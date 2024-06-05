@@ -3,9 +3,11 @@ package consumer
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	pb "github.com/Far-sa/commons/api"
+	"go.opentelemetry.io/otel"
 
 	"github.com/Far-sa/commons/broker"
 	"github.com/Far-sa/payment/contract"
@@ -37,6 +39,12 @@ func (rc *consumer) Listen(ch *amqp.Channel) {
 		for d := range msgs {
 			log.Printf("received message: %s", d.Body)
 
+			// Extract the headers
+			ctx := broker.ExtractAMQPHeader(context.Background(), d.Headers)
+
+			tr := otel.Tracer("amqp")
+			_, messageSpan := tr.Start(ctx, fmt.Sprintf("AMQP - consume - %s", q.Name))
+
 			o := &pb.Order{}
 			if err := json.Unmarshal(d.Body, o); err != nil {
 				d.Nack(false, false)
@@ -53,9 +61,12 @@ func (rc *consumer) Listen(ch *amqp.Channel) {
 				}
 
 				d.Nack(false, false)
-				
+
 				continue
 			}
+
+			messageSpan.AddEvent(fmt.Sprintf("payment.created: %s", paymentLink))
+			messageSpan.End()
 
 			log.Printf("Payment link created %s", paymentLink)
 			d.Ack(false)
