@@ -10,6 +10,7 @@ import (
 	pb "github.com/Far-sa/commons/api"
 	"github.com/Far-sa/gateway/gateway"
 	"github.com/Far-sa/gateway/param"
+	"go.opentelemetry.io/otel"
 )
 
 type handler struct {
@@ -33,7 +34,11 @@ func (h *handler) handleGetOrder(w http.ResponseWriter, r *http.Request) {
 	customerID := r.PathValue("customerID")
 	orderID := r.PathValue("orderID")
 
-	order, _ := h.gateway.GetOrder(r.Context(), orderID, customerID)
+	tr := otel.Tracer("http")
+	ctx, span := tr.Start(r.Context(), fmt.Sprintf("%s %s", r.Method, r.RequestURI))
+	defer span.End()
+
+	order, _ := h.gateway.GetOrder(ctx, orderID, customerID)
 
 	//!! convert error
 	// sErr := status.Convert(err)
@@ -58,13 +63,17 @@ func (h *handler) handleCreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tr := otel.Tracer("http")
+	ctx, span := tr.Start(r.Context(), fmt.Sprintf("%s %s", r.Method, r.RequestURI))
+	defer span.End()
+
 	//TODO use validator library
 	if err := validateItems(items); err != nil {
 		common.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	o, err := h.gateway.CreateOrder(r.Context(), &pb.CreateOrderRequest{
+	o, err := h.gateway.CreateOrder(ctx, &pb.CreateOrderRequest{
 		CustomerID: customerID,
 		Items:      items,
 	})

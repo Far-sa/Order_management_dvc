@@ -10,6 +10,7 @@ import (
 	"github.com/Far-sa/commons/broker"
 	"github.com/Far-sa/commons/discovery"
 	"github.com/Far-sa/commons/discovery/consul"
+	"github.com/Far-sa/commons/tracer"
 	"github.com/Far-sa/order/handler"
 	"github.com/Far-sa/order/repository"
 	"github.com/Far-sa/order/service"
@@ -26,9 +27,15 @@ var (
 	amqpPass    = common.EnvString("RABBITMQ_PASS", "guest")
 	amqpHost    = common.EnvString("RABBITMQ_HOST", "localhost")
 	amqpPort    = common.EnvString("RABBITMQ_PORT", "5672")
+	jaegerAddr  = common.EnvString("JAEGER_ADDR", "localhost:4318")
 )
 
 func main() {
+
+	if err := tracer.SetGlobalTracer(context.TODO(), serviceName, jaegerAddr); err != nil {
+		log.Fatal("failed to set global trace")
+	}
+
 	registry, err := consul.NewRegistry(consulAddr, serviceName)
 	if err != nil {
 		panic(err)

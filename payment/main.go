@@ -11,6 +11,7 @@ import (
 	"github.com/Far-sa/commons/broker"
 	"github.com/Far-sa/commons/discovery"
 	"github.com/Far-sa/commons/discovery/consul"
+	"github.com/Far-sa/commons/tracer"
 	"github.com/Far-sa/payment/adapter/consumer"
 	"github.com/Far-sa/payment/adapter/gateway"
 	stripeProcessor "github.com/Far-sa/payment/adapter/processor/stripe"
@@ -33,9 +34,14 @@ var (
 	stripeKey            = common.EnvString("STRIPE_KEY", "")
 	httpAddr             = common.EnvString("HTTP_ADDRESS", "localhost:8081")
 	endpointStripeSecret = common.EnvString("STRIPE_ENDPOINT_SECRET", "whsec_...")
+	jaegerAddr           = common.EnvString("JAEGER_ADDR", "localhost:4318")
 )
 
 func main() {
+
+	if err := tracer.SetGlobalTracer(context.TODO(), serviceName, jaegerAddr); err != nil {
+		log.Fatal("failed to set global trace")
+	}
 
 	// Register consul
 	registry, err := consul.NewRegistry(consulAddr, serviceName)

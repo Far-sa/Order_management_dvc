@@ -9,6 +9,7 @@ import (
 	common "github.com/Far-sa/commons"
 	"github.com/Far-sa/commons/discovery"
 	"github.com/Far-sa/commons/discovery/consul"
+	"github.com/Far-sa/commons/tracer"
 	"github.com/Far-sa/gateway/gateway"
 	"github.com/Far-sa/gateway/handler"
 
@@ -19,9 +20,14 @@ var (
 	serviceName = "gateway"
 	httpAddr    = common.EnvString("HTTP_ADDR", ":8080")
 	consulAddr  = common.EnvString("CONSUL_ADDR", "localhost:8500")
+	jaegerAddr  = common.EnvString("JAEGER_ADDR", "localhost:4318")
 )
 
 func main() {
+
+	if err := tracer.SetGlobalTracer(context.TODO(), serviceName, jaegerAddr); err != nil {
+		log.Fatal("failed to set global trace")
+	}
 
 	registry, err := consul.NewRegistry(consulAddr, serviceName)
 	if err != nil {
