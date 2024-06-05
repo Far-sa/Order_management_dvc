@@ -7,6 +7,7 @@ package api;
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (Order);
   rpc GetOrder(GetOrderRequest) returns (Order);
+  rpc UpdateOrder(Order) returns (Order);
 
   // rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
   //* rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);

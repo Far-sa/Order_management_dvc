@@ -39,6 +39,15 @@ func (s *service) GetOrder(ctx context.Context, in *pb.GetOrderRequest) (*pb.Ord
 	return s.orderRepository.Get(ctx, in.OrderID, in.CustomerID)
 }
 
+func (s *service) UpdateOrder(ctx context.Context, order *pb.Order) (*pb.Order, error) {
+	err := s.orderRepository.UpdateOrder(ctx, order.ID, order)
+	if err != nil {
+		return nil, err
+	}
+
+	return order, nil
+}
+
 func (s *service) ValidateOrder(ctx context.Context, in *pb.CreateOrderRequest) ([]*pb.Item, error) {
 	if len(in.Items) == 0 {
 		return nil, common.ErrNoItems

@@ -28,6 +28,7 @@ func (r *repository) CreateOrder(ctx context.Context, in *pb.CreateOrderRequest,
 	})
 	return id, nil
 }
+
 func (r *repository) Get(ctx context.Context, id, customerID string) (*pb.Order, error) {
 
 	for _, o := range orders {
@@ -38,4 +39,15 @@ func (r *repository) Get(ctx context.Context, id, customerID string) (*pb.Order,
 
 	return nil, errors.New("order not found")
 
+}
+
+func (r *repository) UpdateOrder(ctx context.Context, id string, order *pb.Order) error {
+	for i, o := range orders {
+		if o.ID == id {
+			orders[i] = order
+			return nil
+		}
+	}
+
+	return errors.New("order not found")
 }

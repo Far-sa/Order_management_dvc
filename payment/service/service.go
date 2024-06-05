@@ -9,10 +9,11 @@ import (
 
 type service struct {
 	processor contract.PaymentProcessor
+	gateway   contract.OrdersGateway
 }
 
-func NewService(processor contract.PaymentProcessor) *service {
-	return &service{processor: processor}
+func NewService(processor contract.PaymentProcessor, gateway contract.OrdersGateway) *service {
+	return &service{processor: processor, gateway: gateway}
 }
 
 func (s *service) CreatePayment(ctx context.Context, o *pb.Order) (string, error) {
@@ -22,5 +23,11 @@ func (s *service) CreatePayment(ctx context.Context, o *pb.Order) (string, error
 	}
 
 	//TODO update order with link
+
+	err = s.gateway.UpdateOrderAfterPaymentLink(ctx, o.ID, link)
+	if err != nil {
+		return "", err
+	}
+
 	return link, nil
 }

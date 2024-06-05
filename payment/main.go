@@ -11,6 +11,7 @@ import (
 	"github.com/Far-sa/commons/broker"
 	"github.com/Far-sa/commons/discovery"
 	"github.com/Far-sa/commons/discovery/consul"
+	"github.com/Far-sa/payment/adapter/gateway"
 	stripeProcessor "github.com/Far-sa/payment/adapter/processor/stripe"
 	"github.com/Far-sa/payment/consumer"
 	"github.com/Far-sa/payment/handler"
@@ -71,7 +72,8 @@ func main() {
 
 	stripeProcessor := stripeProcessor.NewProcessor()
 
-	paymentSvc := service.NewService(stripeProcessor)
+	gateway := gateway.NewGateway(registry)
+	paymentSvc := service.NewService(stripeProcessor, gateway)
 	consumer := consumer.NewConsumer(paymentSvc)
 	go consumer.Listen(ch)
 

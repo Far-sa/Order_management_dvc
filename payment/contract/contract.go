@@ -13,3 +13,7 @@ type PaymentsService interface {
 type PaymentProcessor interface {
 	CreatePaymentLink(context.Context, *pb.Order) (string, error)
 }
+
+type OrdersGateway interface {
+	UpdateOrderAfterPaymentLink(ctx context.Context, orderId, paymentLink string) error
+}

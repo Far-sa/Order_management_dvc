@@ -15,7 +15,7 @@ import (
 type grpcHandler struct {
 	pb.UnimplementedOrderServiceServer
 	service contract.OrderService
-	ch      *amqp.Channel
+	ch      *amqp.Channel //* may pass the events in service layer
 }
 
 // !
@@ -60,4 +60,8 @@ func (h *grpcHandler) CreateOrder(ctx context.Context, in *pb.CreateOrderRequest
 	})
 
 	return order, nil
+}
+
+func (h *grpcHandler) UpdateOrder(ctx context.Context, order *pb.Order) (*pb.Order, error) {
+	return h.service.UpdateOrder(ctx, order)
 }
