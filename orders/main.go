@@ -14,6 +14,7 @@ import (
 	"github.com/Far-sa/order/handler"
 	"github.com/Far-sa/order/repository"
 	"github.com/Far-sa/order/service"
+	"github.com/Far-sa/order/telemetry"
 
 	_ "github.com/joho/godotenv/autoload"
 	"google.golang.org/grpc"
@@ -74,7 +75,10 @@ func main() {
 	repo := repository.New()
 	svc := service.New(repo)
 
-	handler.NewGRPC(grpcServer, svc, ch)
+	//! decorator pattern- useful for metric,tracing and logging
+	svcWithTelemetry := telemetry.NewTelemetryMiddleware(svc)
+
+	handler.NewGRPC(grpcServer, svcWithTelemetry, ch)
 
 	log.Println("GRPC server started at:", grpcAddr)
 
