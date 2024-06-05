@@ -11,12 +11,14 @@ import (
 	"github.com/Far-sa/commons/discovery"
 	"github.com/Far-sa/commons/discovery/consul"
 	"github.com/Far-sa/commons/tracer"
+	consumer "github.com/Far-sa/order/cosumer"
 	"github.com/Far-sa/order/handler"
 	"github.com/Far-sa/order/repository"
 	"github.com/Far-sa/order/service"
 	"github.com/Far-sa/order/telemetry"
 
 	_ "github.com/joho/godotenv/autoload"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
@@ -33,8 +35,13 @@ var (
 
 func main() {
 
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+
+	zap.ReplaceGlobals(logger)
+
 	if err := tracer.SetGlobalTracer(context.TODO(), serviceName, jaegerAddr); err != nil {
-		log.Fatal("failed to set global trace")
+		logger.Fatal("could set global tracer", zap.Error(err))
 	}
 
 	registry, err := consul.NewRegistry(consulAddr, serviceName)
@@ -51,7 +58,7 @@ func main() {
 	go func() {
 		for {
 			if err := registry.HealthCheck(instanceID, serviceName); err != nil {
-				log.Fatal("failed to health check")
+				logger.Error("Failed to health check", zap.Error(err))
 			}
 			time.Sleep(time.Second * 1)
 		}
@@ -69,7 +76,7 @@ func main() {
 
 	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
 	repo := repository.New()
@@ -77,12 +84,18 @@ func main() {
 
 	//! decorator pattern- useful for metric,tracing and logging
 	svcWithTelemetry := telemetry.NewTelemetryMiddleware(svc)
+	svcWithLogging := telemetry.NewTelemetryMiddleware(svcWithTelemetry)
 
-	handler.NewGRPC(grpcServer, svcWithTelemetry, ch)
+	handler.NewGRPC(grpcServer, svcWithLogging, ch)
+
+	consumer := consumer.NewConsumer(svcWithLogging)
+	go consumer.Listen(ch)
+
+	logger.Info("Starting HTTP server", zap.String("port", grpcAddr))
 
 	log.Println("GRPC server started at:", grpcAddr)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatal(err.Error())
+		logger.Fatal("failed to serve", zap.Error(err))
 	}
 }
